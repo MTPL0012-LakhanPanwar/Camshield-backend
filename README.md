@@ -25,7 +25,7 @@ A streamlined Node.js backend for the Security App. This backend handles device 
    ```bash
    # Example .env
    PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/camera-lock-system
+   MONGODB_URI=mongodb://localhost:27017/security-app-system
    JWT_SECRET=your-secret
    ```
 

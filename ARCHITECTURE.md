@@ -139,7 +139,7 @@
 ## 📁 Project Structure
 
 ```
-camera-lock-backend/
+security-app-backend/
 │
 ├── server.js                    # Main application entry point
 ├── package.json                 # Dependencies and scripts

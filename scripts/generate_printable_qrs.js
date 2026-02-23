@@ -9,12 +9,12 @@ const generatePrintableQRs = async () => {
   try {
     // Connect to database
     if (!process.env.MONGODB_URI) {
-        console.error('❌ MONGODB_URI is not defined in .env');
+        console.error('MONGODB_URI is not defined in .env');
         process.exit(1);
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Create output directory
     const outputDir = path.join(__dirname, '../printable_qrs');
@@ -39,9 +39,9 @@ const generatePrintableQRs = async () => {
                 light: '#ffffff'
             }
         });
-        console.log(`✅ Saved printable image to: printable_qrs/ENTRY_SCAN_ME.png`);
+        console.log(`Saved printable image to: printable_qrs/ENTRY_SCAN_ME.png`);
     } else {
-        console.log('❌ No Active Entry QR found. Please run "npm run setup" first.');
+        console.log('No Active Entry QR found. Please run "npm run setup" first.');
     }
 
     // 2. Find the most recent EXIT QR Code
@@ -61,16 +61,16 @@ const generatePrintableQRs = async () => {
                 light: '#ffffff'
             }
         });
-        console.log(`✅ Saved printable image to: printable_qrs/EXIT_SCAN_ME.png`);
+        console.log(`Saved printable image to: printable_qrs/EXIT_SCAN_ME.png`);
     } else {
-        console.log('❌ No Active Exit QR found. Please run "npm run setup" first.');
+        console.log('No Active Exit QR found. Please run "npm run setup" first.');
     }
 
-    console.log('\n🎉 Done! You can now print the images in the "printable_qrs" folder.');
+    console.log('\nDone! You can now print the images in the "printable_qrs" folder.');
     process.exit(0);
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('Error:', error);
     process.exit(1);
   }
 };

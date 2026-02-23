@@ -8,17 +8,17 @@ const generateQRCodes = async (facilityId) => {
   try {
     // Connect to database
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Find facility
     const facility = await Facility.findById(facilityId);
     
     if (!facility) {
-      console.error('❌ Facility not found');
+      console.error('Facility not found');
       process.exit(1);
     }
 
-    console.log(`\n📍 Generating QR codes for: ${facility.name}`);
+    console.log(`\nGenerating QR codes for: ${facility.name}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Set validity period (30 days)
@@ -26,7 +26,7 @@ const generateQRCodes = async (facilityId) => {
     validUntil.setDate(validUntil.getDate() + 30);
 
     // Generate Entry QR
-    console.log('🔐 Generating ENTRY QR Code...');
+    console.log('Generating ENTRY QR Code...');
     const entryQR = await qrGenerator.generateCompleteQRCode(
       'lock',
       facilityId,
@@ -45,13 +45,13 @@ const generateQRCodes = async (facilityId) => {
       validUntil
     });
 
-    console.log('✅ Entry QR Code generated');
-    console.log(`   ID: ${entryQRCode.qrCodeId}`);
-    console.log(`   Image: ${entryQRCode.imagePath}`);
-    console.log(`   Valid until: ${validUntil.toISOString()}\n`);
+    console.log('Entry QR Code generated');
+    console.log(`ID: ${entryQRCode.qrCodeId}`);
+    console.log(`Image: ${entryQRCode.imagePath}`);
+    console.log(`Valid until: ${validUntil.toISOString()}\n`);
 
     // Generate Exit QR
-    console.log('🔓 Generating EXIT QR Code...');
+    console.log('Generating EXIT QR Code...');
     const exitQR = await qrGenerator.generateCompleteQRCode(
       'unlock',
       facilityId,
@@ -70,18 +70,18 @@ const generateQRCodes = async (facilityId) => {
       validUntil
     });
 
-    console.log('✅ Exit QR Code generated');
-    console.log(`   ID: ${exitQRCode.qrCodeId}`);
-    console.log(`   Image: ${exitQRCode.imagePath}`);
-    console.log(`   Valid until: ${validUntil.toISOString()}\n`);
+    console.log('Exit QR Code generated');
+    console.log(`ID: ${exitQRCode.qrCodeId}`);
+    console.log(`Image: ${exitQRCode.imagePath}`);
+    console.log(`Valid until: ${validUntil.toISOString()}\n`);
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🎉 QR Codes generated successfully!');
-    console.log(`📁 Check: ./uploads/qr-codes/\n`);
+    console.log('QR Codes generated successfully!');
+    console.log(`Check: ./uploads/qr-codes/\n`);
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error generating QR codes:', error);
+    console.error('Error generating QR codes:', error);
     process.exit(1);
   }
 };
@@ -90,7 +90,7 @@ const generateQRCodes = async (facilityId) => {
 const facilityId = process.argv[2];
 
 if (!facilityId) {
-  console.error('❌ Please provide a facility ID');
+  console.error('Please provide a facility ID');
   console.log('Usage: node scripts/generateQR.js <facilityId>');
   process.exit(1);
 }

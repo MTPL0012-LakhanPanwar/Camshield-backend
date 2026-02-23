@@ -44,5 +44,7 @@ Thumbs.db
 uploads/
 qr-codes/
 
+printable_qrs/
+
 # Test
-test-results/
+test-results/-Removed the unused code and improved code quality.

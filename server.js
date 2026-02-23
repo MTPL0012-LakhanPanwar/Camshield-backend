@@ -64,27 +64,27 @@ app.use(errorHandler);
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('✅ MongoDB connected successfully');
+    console.log('MongoDB connected successfully');
     
     // Start server
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
 
       // Self-Ping to keep Render free tier alive (Every 14 mins)
       if (process.env.RENDER_EXTERNAL_URL) {
-        console.log('⏰ Keep-Alive service started');
+        console.log('Keep-Alive service started');
         setInterval(() => {
           axios.get(`${process.env.RENDER_EXTERNAL_URL}/health`)
-            .then(() => console.log('💓 Self-ping success'))
-            .catch(e => console.error('💓 Self-ping failed:', e.message));
+            .then(() => console.log('Self-ping success'))
+            .catch(e => console.error('Self-ping failed:', e.message));
         }, 14 * 60 * 1000); // 14 minutes
       }
     });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('MongoDB connection error:', err);
     process.exit(1);
   });
 

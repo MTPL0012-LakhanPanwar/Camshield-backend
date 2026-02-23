@@ -1,7 +1,7 @@
 {
-  "name": "camera-lock-backend",
+  "name": "security-app-backend",
   "version": "1.0.0",
-  "description": "Backend server for camera lock/unlock MDM system",
+  "description": "Backend server for security app MDM system",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0"
@@ -15,7 +15,7 @@
   },
   "keywords": [
     "mdm",
-    "camera-lock",
+    "security-app",
     "qr-code",
     "device-management"
   ],
