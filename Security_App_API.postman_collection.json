@@ -145,6 +145,18 @@
       "name": "Enrollments (Admin)",
       "item": [
         {
+          "name": "Get Active By Device (Forgot Exit)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/enrollments/admin/active-device/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["enrollments", "admin", "active-device", "{{device_id}}"]
+            }
+          },
+          "description": "Look up current active enrollment/device info before forcing exit."
+        },
+        {
           "name": "Force Exit (Forgot Exit Scan)",
           "request": {
             "method": "POST",

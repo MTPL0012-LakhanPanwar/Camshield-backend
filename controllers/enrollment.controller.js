@@ -355,3 +355,75 @@ exports.forceExitAdmin = async (req, res) => {
     });
   }
 };
+
+// @desc    Admin: get active enrollment details by deviceId (for forgotten exit)
+// @route   GET /api/enrollments/admin/active-device/:deviceId
+exports.getActiveByDeviceAdmin = async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+
+    if (!deviceId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'deviceId is required'
+      });
+    }
+
+    const device = await Device.findOne({ deviceId });
+    if (!device) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Device not found'
+      });
+    }
+
+    const enrollment = await Enrollment.findOne({
+      deviceId: device._id,
+      status: 'active'
+    })
+      .populate('facilityId')
+      .populate('entryQRCode')
+      .populate('exitQRCode');
+
+    if (!enrollment) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No active enrollment for this device'
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        enrollmentId: enrollment.enrollmentId,
+        device: {
+          deviceId: device.deviceId,
+          deviceName: device.deviceInfo?.deviceName,
+          platform: device.deviceInfo?.platform,
+          model: device.deviceInfo?.model,
+          status: device.status
+        },
+        facility: enrollment.facilityId
+          ? {
+              id: enrollment.facilityId._id,
+              name: enrollment.facilityId.name
+            }
+          : null,
+        entryQRCode: enrollment.entryQRCode
+          ? {
+              id: enrollment.entryQRCode._id,
+              name: enrollment.entryQRCode.qrCodeId
+            }
+          : null,
+        enrolledAt: enrollment.enrolledAt
+      }
+    });
+  } catch (error) {
+    console.error('Admin get active by device error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
