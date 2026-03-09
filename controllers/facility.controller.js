@@ -5,7 +5,7 @@ const { generateDailyQRsForFacility } = require("../services/dailyQRService");
 
 // @desc    Admin: create facility
 // @route   POST /api/admin/facilities
-exports.createFacilityAdmin = async (req, res) => {
+exports.createFacility = async (req, res) => {
   try {
     const {
       name,
@@ -70,7 +70,7 @@ exports.createFacilityAdmin = async (req, res) => {
 
 // @desc    Admin: list facilities with pagination/search
 // @route   GET /api/admin/facilities
-exports.listFacilitiesAdmin = async (req, res) => {
+exports.listFacilities = async (req, res) => {
   try {
     const { page = 1, limit = 10, status, q } = req.query;
 
@@ -112,7 +112,7 @@ exports.listFacilitiesAdmin = async (req, res) => {
 };
 
 // helper to find by id or facilityId
-const findFacilityByParam = async (id) => {
+const findFacilityById = async (id) => {
   return (
     (await Facility.findOne({ facilityId: id })) ||
     (mongoose.Types.ObjectId.isValid(id) ? await Facility.findById(id) : null)
@@ -121,10 +121,10 @@ const findFacilityByParam = async (id) => {
 
 // @desc    Admin: get facility detail
 // @route   GET /api/admin/facilities/:id
-exports.getFacilityAdmin = async (req, res) => {
+exports.getFacilityById = async (req, res) => {
   try {
     const { id } = req.params;
-    const facility = await findFacilityByParam(id);
+    const facility = await findFacilityById(id);
 
     if (!facility) {
       return res
@@ -144,10 +144,10 @@ exports.getFacilityAdmin = async (req, res) => {
 
 // @desc    Admin: update facility
 // @route   PUT /api/admin/facilities/:id
-exports.updateFacilityAdmin = async (req, res) => {
+exports.updateFacility = async (req, res) => {
   try {
     const { id } = req.params;
-    const facility = await findFacilityByParam(id);
+    const facility = await findFacilityById(id);
 
     if (!facility) {
       return res
@@ -203,10 +203,10 @@ exports.updateFacilityAdmin = async (req, res) => {
 
 // @desc    Admin: delete facility (soft delete -> status inactive)
 // @route   DELETE /api/admin/facilities/:id
-exports.deleteFacilityAdmin = async (req, res) => {
+exports.deleteFacility = async (req, res) => {
   try {
     const { id } = req.params;
-    const facility = await findFacilityByParam(id);
+    const facility = await findFacilityById(id);
 
     if (!facility) {
       return res

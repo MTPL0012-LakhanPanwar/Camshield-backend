@@ -1,8 +1,11 @@
 const Device = require("../models/Device.model");
+const Enrollment = require("../models/Enrollment.model");
+const mdmService = require("../utils/mdmService");
+const { generateRestoreToken } = require("../utils/jwt");
 
 // @desc    Admin: list active devices (search by deviceId/visitorId/model)
 // @route   GET /api/admin/devices/active
-exports.listActiveDevicesAdmin = async (req, res) => {
+exports.listActiveDevices = async (req, res) => {
   try {
     const { page = 1, limit = 10, q } = req.query;
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
@@ -49,7 +52,7 @@ exports.listActiveDevicesAdmin = async (req, res) => {
 
 // @desc    Admin: get active enrollment details by deviceId (for forgotten exit)
 // @route   GET /api/enrollments/admin/active-device/:deviceId
-exports.getActiveByDeviceAdmin = async (req, res) => {
+exports.getActiveDeviceById = async (req, res) => {
   try {
     const { deviceId } = req.params;
 
@@ -121,9 +124,10 @@ exports.getActiveByDeviceAdmin = async (req, res) => {
 // @desc    Admin: force exit (unlock) when user forgot to scan exit
 // @route   POST /api/enrollments/admin/force-exit
 // @note    Protect this route with auth middleware when available.
-exports.forceExitAdmin = async (req, res) => {
+exports.forceExit = async (req, res) => {
   try {
-    const { enrollmentId, reason, initiatedBy, deviceId } = req.body;
+    const { enrollmentId, reason, initiatedBy } = req.body;
+    const deviceId = req.body.deviceId || req.params?.deviceId;
 
     if (!enrollmentId && !deviceId) {
       return res.status(400).json({

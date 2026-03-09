@@ -1,145 +1,104 @@
 # Security App Backend
 
-A streamlined Node.js backend for the Security App. This backend handles device enrollment (entry/lock) and unenrollment (exit/unlock) via QR codes.
+Node.js + Express backend for QR-based visitor device control. It locks a visitor's camera on entry, unlocks on exit, rotates daily QR codes, and gives admins simple facility/device controls.
 
-## 🚀 Features
+## Features
+- Entry/Exit scans with MDM lock/unlock.
+- Single enrollment record per device (re-enroll updates the same doc).
+- Admin JWT auth plus admin listing/detail endpoints.
+- Facility CRUD with daily QR generation + email delivery.
+- Device tools: active list, visitor assignment, force-exit, view active enrollment.
+- Health check and configurable CORS/helmet logging.
 
-- **Entry Scan**: Validates entry QR and locks camera.
-- **Exit Scan**: Validates exit QR and unlocks camera.
-- **Setup**: Script to generate Entry/Exit QRs for testing.
-- **Daily QR Rotation**: Generates per-facility Entry/Exit QR codes daily, emails them to facility contacts, and expires prior codes/devices automatically.
+## Prerequisites
+- Node.js 18+
+- MongoDB 6+
+- SMTP creds for QR email (optional but recommended)
+- FCM server key for push restore (optional)
 
-## 📋 Prerequisites
+## Setup
+1) Install deps
+```bash
+npm install
+```
 
-- Node.js (v14 or higher)
-- MongoDB (running locally or accessible via URI)
-
-## 🛠️ Installation & Setup
-
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Configure environment variables**
-   Ensure `.env` exists and has the correct `MONGODB_URI`.
-   ```bash
-# Example .env
+2) Configure environment (`.env`)
+```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/security-app-system
-JWT_SECRET=your-secret
+JWT_SECRET=change-me
 ADMIN_TOKEN_EXPIRE=7d
 RESTORE_TOKEN_EXPIRE=10m
-FCM_SERVER_KEY=your-fcm-server-key
+ALLOWED_ORIGINS=http://localhost:3000
+FCM_SERVER_KEY=your-fcm-key
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
-SMTP_USER=example@example.com
+SMTP_USER=user@example.com
 SMTP_PASS=example-password
 EMAIL_FROM=Security App <no-reply@example.com>
-   DAILY_QR_CRON=0 0 * * *
-   DAILY_QR_TZ=UTC
-   ```
+DAILY_QR_CRON=0 0 * * *
+DAILY_QR_TZ=UTC
+RENDER_EXTERNAL_URL=
+```
 
-3. **Run Setup (Generates QRs)**
-   This script creates a test Facility and generates the Entry and Exit QR tokens you need for the app.
-   ```bash
-   npm run setup
-   ```
-   **Copy the tokens output by this script.** You will use them in your API requests.
+3) Run the server
+```bash
+npm run dev   # or npm start
+```
+Server listens on `http://localhost:${PORT}`.
 
-4. **(Optional) Create a facility without admin**
-   ```bash
-   curl -X POST http://localhost:5000/api/facilities/create-facility \
-     -H "Content-Type: application/json" \
-     -d '{
-       "name": "Main Building",
-       "description": "Primary site",
-       "notificationEmails": ["you@example.com"],
-       "timezone": "UTC"
-     }'
-   ```
+4) Generate QR codes (manual run)
+```bash
+# All facilities
+npm run generate-qr -- all
+# Specific facility (_id or facilityId)
+npm run generate-qr -- YOUR_FACILITY_ID
+```
+Generated PNGs land in `uploads/qr-codes/` and emails are sent when recipients are configured.
 
-5. **Start the server**
-   ```bash
-   npm start
-   ```
+## API Overview
+Base URL: `http://localhost:5000/api`
 
-   **Production cron:** set `DAILY_QR_CRON=0 0 * * *` and `DAILY_QR_TZ` to your plant timezone so QR generation + email runs once per day at noon. Avoid using the rapid cron (`*/2 * * * *`) outside of testing.
-   Server runs on `http://localhost:5000`.
-
-## 📚 API Endpoints
-
-### Base URL
-`http://localhost:5000/api`
+### Public
+- `GET /health`
+- `POST /facilities/create-facility`
+- `POST /enrollments/scan-entry`
+- `POST /enrollments/scan-exit`
+- `POST /enrollments/restore-from-push`
 
 ### Admin Auth
-- `POST /auth/admin/register` — create admin (username, password)
-- `POST /auth/admin/login` — login, returns JWT (use as `Authorization: Bearer <token>` for admin routes)
+- `POST /auth/admin/register`
+- `POST /auth/admin/login`
 
-### Admin Facilities (JWT required)
-- `GET /admin/facilities?page=1&limit=10&status=active&q=search` — paginated list
-- `POST /admin/facilities` — create facility (also generates today’s entry/exit QRs)
-- `GET /admin/facilities/:id` — get by `facilityId` or Mongo `_id`
-- `PUT /admin/facilities/:id` — update fields
-- `DELETE /admin/facilities/:id` — soft delete (sets status inactive)
+### Admin Users (JWT)
+- `GET /admin/admins` — paginated, optional `q` search
+- `GET /admin/admins/:id` — by Mongo `_id` (fallback to username)
 
-### Admin Devices (JWT required)
-- `GET /admin/devices/active?page=1&limit=10&q=search` — list active devices (search by deviceId/visitorId/name/model)
-- `PUT /admin/devices/:deviceId/visitor` — assign/update `visitorId` (auto-generates `visitor_N` if missing)
-- `POST /admin/devices/:deviceId/force-exit` — unlock + send restore push to the device
+### Admin Facilities (JWT)
+- `GET /admin/facilities?page=1&limit=10&status=active&q=search`
+- `POST /admin/facilities`
+- `GET /admin/facilities/:id` (accepts `facilityId` or `_id`)
+- `PUT /admin/facilities/:id`
+- `DELETE /admin/facilities/:id` (sets status inactive)
 
-### Visitor Restore
-- `POST /enrollments/restore-from-push` — device calls after tapping push notification to clear restrictions
+### Admin Devices (JWT)
+- `GET /admin/devices/active?page=1&limit=10&q=`
+- `PUT /admin/devices/:deviceId/visitor`
+- `GET /admin/devices/:deviceId/active-enrollment` (legacy `/admin/active-device/:deviceId` kept)
+- `POST /admin/devices/:deviceId/force-exit`
 
-### 1. Entry Scan (Lock Camera)
-**Endpoint**: `POST /enrollments/scan-entry`
+### Enrollment Behavior
+- A device keeps **one enrollment document**. Re-enrolling updates the same record (facility, QR refs, timestamps) instead of inserting a new one.
+- Double entry in the same facility is idempotent (locks camera again); entry in a different facility while active returns 409 until the device exits.
 
-**Request Body**:
-```json
-{
-  "token": "QR_CODE_CONTENT_FROM_SETUP",
-  "deviceId": "UNIQUE_DEVICE_ID",
-  "deviceInfo": {
-    "manufacturer": "Google",
-    "model": "Pixel 6",
-    "osVersion": "Android 13",
-    "platform": "android",
-    "pushToken": "FCM_DEVICE_TOKEN"
-  }
-}
-```
+## Postman
+Import `Security_App_API.postman_collection.json` (kept up to date with all routes above). Set `base_url` and `admin_token` in the collection variables.
 
-**Response**:
-```json
-{
-  "status": "success",
-  "message": "Entry allowed",
-  "data": {
-    "enrollmentId": "...",
-    "facilityName": "Secure Facility A",
-    "action": "LOCK_CAMERA"
-  }
-}
-```
+## Scripts
+- `npm run generate-qr -- <id|all>` — create entry/exit QRs
+- `npm run generate-printable` — create printable sheets for all facilities
 
-### 2. Exit Scan (Unlock Camera)
-**Endpoint**: `POST /enrollments/scan-exit`
-
-**Request Body**:
-```json
-{
-  "token": "QR_CODE_CONTENT_FROM_SETUP",
-  "deviceId": "UNIQUE_DEVICE_ID"
-}
-```
-
-**Response**:
-```json
-{
-  "status": "success",
-  "message": "Exit allowed",
-  "data": {
-    "action": "UNLOCK_CAMERA"
-  }
-}
-```
+## Deployment Notes
+- Set `DAILY_QR_CRON`/`DAILY_QR_TZ` for daily rotation and email.
+- `RENDER_EXTERNAL_URL` enables keep-alive pings when deployed on Render free tier.
+- CORS origins derive from `ALLOWED_ORIGINS` (comma-separated). Helmet and morgan are enabled by default.

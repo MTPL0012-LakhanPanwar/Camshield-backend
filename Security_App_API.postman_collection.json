@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Security App API",
-    "description": "Complete Postman collection for Security App public and admin APIs (as of 2026-03-09).",
+    "description": "Lean Postman collection for the active Security App endpoints only (updated 2026-03-09).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,12 +12,9 @@
     { "key": "admin_password", "value": "changeme", "type": "string" },
     { "key": "facility_id", "value": "", "type": "string" },
     { "key": "device_id", "value": "test-device-123", "type": "string" },
-    { "key": "visitor_id", "value": "visitor_1", "type": "string" },
     { "key": "entry_token", "value": "", "type": "string" },
     { "key": "exit_token", "value": "", "type": "string" },
-    { "key": "restore_token", "value": "", "type": "string" },
-    { "key": "enrollment_id", "value": "", "type": "string" },
-    { "key": "push_token", "value": "", "type": "string" }
+    { "key": "restore_token", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -27,35 +24,7 @@
           "name": "Health Check",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Facilities (Public)",
-      "item": [
-        {
-          "name": "Create Facility (public)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"HQ One\",\n  \"description\": \"Headquarters lobby kiosks\",\n  \"location\": {\n    \"address\": \"1 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"country\": \"USA\"\n  },\n  \"notificationEmails\": [\"security@example.com\"],\n  \"timezone\": \"America/Chicago\",\n  \"status\": \"active\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{api_base}}/facilities/create-facility",
-              "host": ["{{base_url}}"],
-              "path": ["api", "facilities", "create-facility"]
-            }
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
           }
         }
       ]
@@ -67,92 +36,39 @@
           "name": "Scan Entry (lock)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"{{entry_token}}\",\n  \"deviceId\": \"{{device_id}}\",\n  \"deviceInfo\": {\n    \"manufacturer\": \"Samsung\",\n    \"model\": \"SM-G990\",\n    \"osVersion\": \"14\",\n    \"platform\": \"android\",\n   \"deviceName\": \"Visitor Phone\",\n    \"pushToken\": \"{{push_token}}\"\n  }\n}",
+              "raw": "{\n  \"token\": \"{{entry_token}}\",\n  \"deviceId\": \"{{device_id}}\",\n  \"deviceInfo\": {\n    \"platform\": \"android\",\n    \"model\": \"Pixel\",\n    \"pushToken\": \"optional-push-token\"\n  }\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/enrollments/scan-entry",
-              "host": ["{{base_url}}"],
-              "path": ["api", "enrollments", "scan-entry"]
-            }
+            "url": { "raw": "{{api_base}}/enrollments/scan-entry", "host": ["{{base_url}}"], "path": ["api", "enrollments", "scan-entry"] }
           }
         },
         {
           "name": "Scan Exit (unlock)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"{{exit_token}}\",\n  \"deviceId\": \"{{device_id}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/enrollments/scan-exit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "enrollments", "scan-exit"]
-            }
+            "url": { "raw": "{{api_base}}/enrollments/scan-exit", "host": ["{{base_url}}"], "path": ["api", "enrollments", "scan-exit"] }
           }
         },
         {
           "name": "Restore From Push (unlock)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"{{restore_token}}\",\n  \"deviceId\": \"{{device_id}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/enrollments/restore-from-push",
-              "host": ["{{base_url}}"],
-              "path": ["api", "enrollments", "restore-from-push"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Enrollments (Admin)",
-      "item": [
-        {
-          "name": "Force Exit (by enrollment or device)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"enrollmentId\": \"{{enrollment_id}}\",\n  \"deviceId\": \"{{device_id}}\",\n  \"reason\": \"Forgot to scan exit\",\n  \"initiatedBy\": \"admin-username\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{api_base}}/enrollments/admin/force-exit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "enrollments", "admin", "force-exit"]
-            }
-          }
-        },
-        {
-          "name": "Get Active Enrollment By Device",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{api_base}}/enrollments/admin/active-device/{{device_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "enrollments", "admin", "active-device", "{{device_id}}"]
-            }
+            "url": { "raw": "{{api_base}}/enrollments/restore-from-push", "host": ["{{base_url}}"], "path": ["api", "enrollments", "restore-from-push"] }
           }
         }
       ]
@@ -164,68 +80,45 @@
           "name": "Admin Register",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/auth/admin/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "admin", "register"]
-            }
+            "url": { "raw": "{{api_base}}/auth/admin/register", "host": ["{{base_url}}"], "path": ["api", "auth", "admin", "register"] }
           }
         },
         {
           "name": "Admin Login",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/auth/admin/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "admin", "login"]
-            }
+            "url": { "raw": "{{api_base}}/auth/admin/login", "host": ["{{base_url}}"], "path": ["api", "auth", "admin", "login"] }
           }
         }
       ]
     },
     {
       "name": "Admin Facilities",
-      "auth": {
-        "type": "bearer",
-        "bearer": [
-          { "key": "token", "value": "{{admin_token}}", "type": "string" }
-        ]
-      },
+      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{admin_token}}", "type": "string" } ] },
       "item": [
         {
           "name": "Create Facility (admin)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"HQ One\",\n  \"description\": \"Headquarters lobby kiosks\",\n  \"location\": {\n    \"address\": \"1 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"country\": \"USA\"\n  },\n  \"notificationEmails\": [\"security@example.com\"],\n  \"timezone\": \"America/Chicago\",\n  \"status\": \"active\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/admin/facilities",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "facilities"]
-            }
+            "url": { "raw": "{{api_base}}/admin/facilities", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities"] }
           }
         },
         {
@@ -249,53 +142,34 @@
           "name": "Get Facility Detail",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "facilities", "{{facility_id}}"]
-            }
+            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
           }
         },
         {
           "name": "Update Facility",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated HQ\",\n  \"description\": \"Updated description\",\n  \"location\": {\n    \"address\": \"2 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"country\": \"USA\"\n  },\n  \"notificationEmails\": [\"security@example.com\", \"ops@example.com\"],\n  \"timezone\": \"America/Chicago\",\n  \"status\": \"active\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "facilities", "{{facility_id}}"]
-            }
+            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
           }
         },
         {
           "name": "Delete Facility (soft inactivate)",
           "request": {
             "method": "DELETE",
-            "url": {
-              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "facilities", "{{facility_id}}"]
-            }
+            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
           }
         }
       ]
     },
     {
       "name": "Admin Devices",
-      "auth": {
-        "type": "bearer",
-        "bearer": [
-          { "key": "token", "value": "{{admin_token}}", "type": "string" }
-        ]
-      },
+      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{admin_token}}", "type": "string" } ] },
       "item": [
         {
           "name": "List Active Devices",
@@ -314,41 +188,23 @@
           }
         },
         {
-          "name": "Assign / Update Visitor",
+          "name": "Get Specific Active Device",
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"visitorId\": \"{{visitor_id}}\",\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{api_base}}/admin/devices/{{device_id}}/visitor",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "devices", "{{device_id}}", "visitor"]
-            }
+            "method": "GET",
+            "url": { "raw": "{{api_base}}/admin/devices/{{device_id}}/active-enrollment", "host": ["{{base_url}}"], "path": ["api", "admin", "devices", "{{device_id}}", "active-enrollment"] }
           }
         },
         {
           "name": "Force Exit (admin protected)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Forgot to scan exit\",\n  \"initiatedBy\": \"admin-username\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "{{api_base}}/admin/devices/{{device_id}}/force-exit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "devices", "{{device_id}}", "force-exit"]
-            }
+            "url": { "raw": "{{api_base}}/admin/devices/{{device_id}}/force-exit", "host": ["{{base_url}}"], "path": ["api", "admin", "devices", "{{device_id}}", "force-exit"] }
           }
         }
       ]

@@ -155,17 +155,27 @@ exports.scanEntry = async (req, res) => {
       });
     }
 
-    // Create enrollment record
-    const enrollmentId = uuidv4();
-
-    const enrollment = await Enrollment.create({
-      enrollmentId,
-      deviceId: device._id,
-      facilityId: qrCode.facilityId._id,
-      entryQRCode: qrCode._id,
-      status: "active",
-      enrolledAt: new Date(),
+    // Reuse existing enrollment record for this device (single entry per device)
+    let enrollment = await Enrollment.findOne({ deviceId: device._id }).sort({
+      createdAt: -1,
     });
+
+    if (!enrollment) {
+      enrollment = new Enrollment({
+        enrollmentId: uuidv4(),
+        deviceId: device._id,
+      });
+    }
+
+    enrollment.facilityId = qrCode.facilityId._id;
+    enrollment.entryQRCode = qrCode._id;
+    enrollment.exitQRCode = null;
+    enrollment.status = "active";
+    enrollment.enrolledAt = new Date();
+    enrollment.unenrolledAt = null;
+    enrollment.reason = undefined;
+    enrollment.initiatedBy = undefined;
+    await enrollment.save();
 
     // Update device status
     device.status = "active";
