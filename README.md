@@ -24,15 +24,18 @@ A streamlined Node.js backend for the Security App. This backend handles device 
 2. **Configure environment variables**
    Ensure `.env` exists and has the correct `MONGODB_URI`.
    ```bash
-   # Example .env
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/security-app-system
-   JWT_SECRET=your-secret
-   SMTP_HOST=smtp.example.com
-   SMTP_PORT=587
-   SMTP_USER=example@example.com
-   SMTP_PASS=example-password
-   EMAIL_FROM=Security App <no-reply@example.com>
+# Example .env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/security-app-system
+JWT_SECRET=your-secret
+ADMIN_TOKEN_EXPIRE=7d
+RESTORE_TOKEN_EXPIRE=10m
+FCM_SERVER_KEY=your-fcm-server-key
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=example@example.com
+SMTP_PASS=example-password
+EMAIL_FROM=Security App <no-reply@example.com>
    DAILY_QR_CRON=0 0 * * *
    DAILY_QR_TZ=UTC
    ```
@@ -69,6 +72,25 @@ A streamlined Node.js backend for the Security App. This backend handles device 
 ### Base URL
 `http://localhost:5000/api`
 
+### Admin Auth
+- `POST /auth/admin/register` — create admin (username, password)
+- `POST /auth/admin/login` — login, returns JWT (use as `Authorization: Bearer <token>` for admin routes)
+
+### Admin Facilities (JWT required)
+- `GET /admin/facilities?page=1&limit=10&status=active&q=search` — paginated list
+- `POST /admin/facilities` — create facility (also generates today’s entry/exit QRs)
+- `GET /admin/facilities/:id` — get by `facilityId` or Mongo `_id`
+- `PUT /admin/facilities/:id` — update fields
+- `DELETE /admin/facilities/:id` — soft delete (sets status inactive)
+
+### Admin Devices (JWT required)
+- `GET /admin/devices/active?page=1&limit=10&q=search` — list active devices (search by deviceId/visitorId/name/model)
+- `PUT /admin/devices/:deviceId/visitor` — assign/update `visitorId` (auto-generates `visitor_N` if missing)
+- `POST /admin/devices/:deviceId/force-exit` — unlock + send restore push to the device
+
+### Visitor Restore
+- `POST /enrollments/restore-from-push` — device calls after tapping push notification to clear restrictions
+
 ### 1. Entry Scan (Lock Camera)
 **Endpoint**: `POST /enrollments/scan-entry`
 
@@ -82,7 +104,7 @@ A streamlined Node.js backend for the Security App. This backend handles device 
     "model": "Pixel 6",
     "osVersion": "Android 13",
     "platform": "android",
-    "appVersion": "1.0.0"
+    "pushToken": "FCM_DEVICE_TOKEN"
   }
 }
 ```

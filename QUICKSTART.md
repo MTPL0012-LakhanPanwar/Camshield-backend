@@ -107,7 +107,6 @@ curl -X POST http://localhost:5000/api/enrollments/scan-entry \
       "model": "Galaxy S21",
       "osVersion": "Android 13",
       "platform": "android",
-      "appVersion": "1.0.0"
     },
     "visitorInfo": {
       "name": "John Doe",

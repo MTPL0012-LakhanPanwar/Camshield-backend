@@ -28,7 +28,6 @@ const generatePrintableQRs = async () => {
     
     if (entryQR) {
         console.log('\nFOUND ENTRY QR:');
-        console.log(`Token: ${entryQR.token}`);
         
         // Generate image file with a clear name
         const filePath = path.join(outputDir, 'ENTRY_SCAN_ME.png');
@@ -40,7 +39,7 @@ const generatePrintableQRs = async () => {
                 light: '#ffffff'
             }
         });
-        console.log(`Saved printable image to: uploads/qr-codes/ENTRY_SCAN_ME.png`);
+        console.log(`Saved printable image to: uploads/qr-codes`);
     } else {
         console.log('No Active Entry QR found. Please run "npm run setup" first.');
     }
@@ -50,7 +49,6 @@ const generatePrintableQRs = async () => {
     
     if (exitQR) {
         console.log('\nFOUND EXIT QR:');
-        console.log(`Token: ${exitQR.token}`);
         
         // Generate image file with a clear name
         const filePath = path.join(outputDir, 'EXIT_SCAN_ME.png');
@@ -62,7 +60,7 @@ const generatePrintableQRs = async () => {
                 light: '#ffffff'
             }
         });
-        console.log(`Saved printable image to: uploads/qr-codes/EXIT_SCAN_ME.png`);
+        console.log(`Saved printable image to: uploads/qr-codes`);
     } else {
         console.log('No Active Exit QR found. Please run "npm run setup" first.');
     }

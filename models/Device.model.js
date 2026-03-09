@@ -16,8 +16,17 @@ const deviceSchema = new mongoose.Schema(
         enum: ["android", "ios"],
         required: true,
       },
-      appVersion: String,
       deviceName: String,
+    },
+    visitorId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+    pushToken: {
+      type: String,
+      trim: true,
     },
     currentFacility: {
       type: mongoose.Schema.Types.ObjectId,

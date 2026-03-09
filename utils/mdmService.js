@@ -1,38 +1,37 @@
-const axios = require('axios');
+const axios = require("axios");
 
 class MDMService {
-
   // Android: Enroll device with Work Profile
   async enrollAndroidDevice(deviceId, deviceInfo) {
     try {
       // This is a placeholder for actual MDM API integration
       // Replace with your actual MDM provider's API calls
-      
-      console.log(`Enrolling Android device: ${deviceId}`);
-      
+
+      console.log(`Enrolling Android device: ${deviceId} ${deviceInfo}`);
+
       // Simulate enrollment
       const enrollmentData = {
         deviceId,
-        platform: 'android',
-        enrollmentMethod: 'work_profile',
+        platform: "android",
+        enrollmentMethod: "work_profile",
         enrollmentId: `android_${Date.now()}`,
         profileId: `profile_${Date.now()}`,
         policies: {
           cameraDisabled: true,
-          screenshotDisabled: true
+          screenshotDisabled: true,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       return {
         success: true,
-        data: enrollmentData
+        data: enrollmentData,
       };
     } catch (error) {
-      console.error('Android enrollment error:', error);
+      console.error("Android enrollment error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -40,36 +39,36 @@ class MDMService {
   // iOS: Enroll device with MDM profile
   async enrolliOSDevice(deviceId, deviceInfo) {
     try {
-      console.log(`Enrolling iOS device: ${deviceId}`);
-      
+      console.log(`Enrolling iOS device: ${deviceId} ${deviceInfo}`);
+
       // Generate MDM profile configuration
       const profileConfig = this.generateiOSProfile(deviceId);
-      
+
       // Simulate enrollment
       const enrollmentData = {
         deviceId,
-        platform: 'ios',
-        enrollmentMethod: 'mdm_profile',
+        platform: "ios",
+        enrollmentMethod: "mdm_profile",
         enrollmentId: `ios_${Date.now()}`,
         profileId: `profile_${Date.now()}`,
         profileConfig,
         policies: {
           cameraDisabled: true,
-          restrictedApps: ['camera']
+          restrictedApps: ["camera"],
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       return {
         success: true,
         data: enrollmentData,
-        profileDownloadURL: `/api/mdm/profile/${enrollmentData.profileId}`
+        profileDownloadURL: `/api/mdm/profile/${enrollmentData.profileId}`,
       };
     } catch (error) {
-      console.error('iOS enrollment error:', error);
+      console.error("iOS enrollment error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -78,19 +77,19 @@ class MDMService {
   async lockCamera(deviceId, platform) {
     try {
       console.log(`Locking camera for device: ${deviceId} (${platform})`);
-      
-      if (platform === 'android') {
+
+      if (platform === "android") {
         return await this.lockAndroidCamera(deviceId);
-      } else if (platform === 'ios') {
+      } else if (platform === "ios") {
         return await this.lockiOSCamera(deviceId);
       }
-      
-      throw new Error('Unsupported platform');
+
+      throw new Error("Unsupported platform");
     } catch (error) {
-      console.error('Camera lock error:', error);
+      console.error("Camera lock error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -99,19 +98,19 @@ class MDMService {
   async unlockCamera(deviceId, platform) {
     try {
       console.log(`Unlocking camera for device: ${deviceId} (${platform})`);
-      
-      if (platform === 'android') {
+
+      if (platform === "android") {
         return await this.unlockAndroidCamera(deviceId);
-      } else if (platform === 'ios') {
+      } else if (platform === "ios") {
         return await this.unlockiOSCamera(deviceId);
       }
-      
-      throw new Error('Unsupported platform');
+
+      throw new Error("Unsupported platform");
     } catch (error) {
-      console.error('Camera unlock error:', error);
+      console.error("Camera unlock error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -120,21 +119,21 @@ class MDMService {
   async unenrollDevice(deviceId, platform) {
     try {
       console.log(`Unenrolling device: ${deviceId} (${platform})`);
-      
+
       // Remove policies and unenroll
       const result = {
         success: true,
         deviceId,
         platform,
-        unenrolledAt: new Date().toISOString()
+        unenrolledAt: new Date().toISOString(),
       };
-      
+
       return result;
     } catch (error) {
-      console.error('Unenrollment error:', error);
+      console.error("Unenrollment error:", error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -144,9 +143,9 @@ class MDMService {
     // Set camera policy to disabled
     return {
       success: true,
-      policy: 'cameraDisabled',
+      policy: "cameraDisabled",
       value: true,
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
     };
   }
 
@@ -154,9 +153,9 @@ class MDMService {
     // Set camera policy to enabled
     return {
       success: true,
-      policy: 'cameraDisabled',
+      policy: "cameraDisabled",
       value: false,
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
     };
   }
 
@@ -165,9 +164,9 @@ class MDMService {
     // Update MDM profile to restrict camera
     return {
       success: true,
-      policy: 'cameraRestricted',
+      policy: "cameraRestricted",
       value: true,
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
     };
   }
 
@@ -175,9 +174,9 @@ class MDMService {
     // Update MDM profile to allow camera
     return {
       success: true,
-      policy: 'cameraRestricted',
+      policy: "cameraRestricted",
       value: false,
-      appliedAt: new Date().toISOString()
+      appliedAt: new Date().toISOString(),
     };
   }
 
@@ -185,23 +184,23 @@ class MDMService {
   generateiOSProfile(deviceId) {
     // This generates a basic .mobileconfig profile structure
     // In production, you'd use a proper MDM solution
-    
+
     return {
       PayloadContent: [
         {
-          PayloadType: 'com.apple.applicationaccess',
+          PayloadType: "com.apple.applicationaccess",
           PayloadVersion: 1,
           PayloadIdentifier: `com.cameralock.restrictions.${deviceId}`,
           PayloadUUID: deviceId,
-          PayloadDisplayName: 'Camera Restrictions',
-          allowCamera: false
-        }
+          PayloadDisplayName: "Camera Restrictions",
+          allowCamera: false,
+        },
       ],
-      PayloadDisplayName: 'Camera Lock Profile',
+      PayloadDisplayName: "Camera Lock Profile",
       PayloadIdentifier: `com.cameralock.profile.${deviceId}`,
-      PayloadType: 'Configuration',
+      PayloadType: "Configuration",
       PayloadUUID: deviceId,
-      PayloadVersion: 1
+      PayloadVersion: 1,
     };
   }
 
@@ -212,29 +211,53 @@ class MDMService {
       return {
         enrolled: true,
         deviceId,
-        checkedAt: new Date().toISOString()
+        checkedAt: new Date().toISOString(),
       };
     } catch (error) {
       return {
         enrolled: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
 
   // Send push notification to device
-  async sendPushNotification(deviceId, message) {
+  async sendPushNotification(pushToken, payload) {
     try {
-      console.log(`Sending push to device: ${deviceId}`);
-      // Implement actual push notification logic
+      if (!pushToken) {
+        return { success: false, error: "missing pushToken" };
+      }
+
+      const serverKey = process.env.FCM_SERVER_KEY;
+      if (!serverKey) {
+        return { success: false, error: "FCM_SERVER_KEY not configured" };
+      }
+
+      const body = {
+        to: pushToken,
+        notification: {
+          title: payload?.title || "Security App",
+          body: payload?.message || "Action required",
+        },
+        data: payload || {},
+        priority: "high",
+      };
+
+      await axios.post("https://fcm.googleapis.com/fcm/send", body, {
+        headers: {
+          Authorization: `key=${serverKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       return {
         success: true,
-        sentAt: new Date().toISOString()
+        sentAt: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }

@@ -45,7 +45,6 @@ const generateForFacility = async (facility) => {
 
   console.log("Entry QR Code generated");
   console.log(`ID: ${entryQRCode.qrCodeId}`);
-  console.log(`Image: ${entryQRCode.imagePath}`);
   console.log(`Valid until: ${validUntil.toISOString()}\n`);
 
   // Exit QR
@@ -71,7 +70,6 @@ const generateForFacility = async (facility) => {
 
   console.log("Exit QR Code generated");
   console.log(`ID: ${exitQRCode.qrCodeId}`);
-  console.log(`Image: ${exitQRCode.imagePath}`);
   console.log(`Valid until: ${validUntil.toISOString()}\n`);
 
   // Send email with today's QR attachments if facility has notification emails

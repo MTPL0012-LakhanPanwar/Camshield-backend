@@ -1,10 +1,9 @@
-const Enrollment = require('../models/Enrollment.model');
-const Device = require('../models/Device.model');
-const QRCode = require('../models/QRCode.model');
-const Facility = require('../models/Facility.model');
-const mdmService = require('../utils/mdmService');
-const { verifyToken } = require('../utils/jwt');
-const { v4: uuidv4 } = require('uuid');
+const Enrollment = require("../models/Enrollment.model");
+const Device = require("../models/Device.model");
+const QRCode = require("../models/QRCode.model");
+const mdmService = require("../utils/mdmService");
+const { verifyToken, verifyRestoreToken } = require("../utils/jwt");
+const { v4: uuidv4 } = require("uuid");
 
 // Normalize incoming token:
 // - Strip surrounding braces
@@ -12,20 +11,20 @@ const { v4: uuidv4 } = require('uuid');
 const normalizeToken = (rawToken) => {
   if (!rawToken) return null;
   let t = String(rawToken).trim();
-  t = t.replace(/^[{]/, '').replace(/[}]$/, ''); // remove stray braces
+  t = t.replace(/^[{]/, "").replace(/[}]$/, ""); // remove stray braces
 
-  if (t.includes('token=')) {
+  if (t.includes("token=")) {
     // Attempt URL parse first
     try {
       const url = new URL(t);
-      const param = url.searchParams.get('token');
+      const param = url.searchParams.get("token");
       if (param) t = param;
     } catch (err) {
       // Fallback manual parse for custom schemes
-      const idx = t.indexOf('token=');
+      const idx = t.indexOf("token=");
       if (idx >= 0) {
-        t = t.slice(idx + 'token='.length);
-        const amp = t.indexOf('&');
+        t = t.slice(idx + "token=".length);
+        const amp = t.indexOf("&");
         if (amp >= 0) t = t.slice(0, amp);
       }
     }
@@ -37,22 +36,17 @@ const normalizeToken = (rawToken) => {
 // @route   POST /api/enrollments/scan-entry
 exports.scanEntry = async (req, res) => {
   try {
-    const { 
-      token, 
-      deviceId, 
-      deviceInfo 
-    } = req.body;
+    const { token, deviceId, deviceInfo } = req.body;
+    const pushToken = deviceInfo?.pushToken;
 
     // Normalize token in case mobile passes deep link URL
     const normalizedToken = normalizeToken(token);
 
-    console.log("Values", token, "->", normalizedToken, deviceId, deviceInfo);
-
     // Validate required fields
     if (!normalizedToken || !deviceId || !deviceInfo) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Token, deviceId, and deviceInfo are required'
+        status: "error",
+        message: "Token, deviceId, and deviceInfo are required",
       });
     }
 
@@ -61,108 +55,120 @@ exports.scanEntry = async (req, res) => {
     let qrCode;
     try {
       decoded = verifyToken(normalizedToken);
-      qrCode = await QRCode.findOne({ qrCodeId: decoded.qrCodeId }).populate('facilityId');
+      qrCode = await QRCode.findOne({ qrCodeId: decoded.qrCodeId }).populate(
+        "facilityId"
+      );
     } catch (error) {
       // Fallback: token might already be the stored token string (e.g., older QR flow)
-      qrCode = await QRCode.findOne({ token: normalizedToken }).populate('facilityId');
+      qrCode = await QRCode.findOne({ token: normalizedToken }).populate(
+        "facilityId"
+      );
       if (qrCode) {
         decoded = { qrCodeId: qrCode.qrCodeId };
       } else {
         return res.status(400).json({
-          status: 'error',
-          message: 'Invalid or expired token'
+          status: "error",
+          message: "Invalid or expired token",
         });
       }
     }
 
     if (!qrCode || !qrCode.isValid()) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Invalid or expired QR code'
+        status: "error",
+        message: "Invalid or expired QR code",
       });
     }
 
     // Check if it's an entry QR
-    if (qrCode.type !== 'entry') {
+    if (qrCode.type !== "entry") {
       return res.status(400).json({
-        status: 'error',
-        message: 'This QR code is not for entry'
+        status: "error",
+        message: "This QR code is not for entry",
       });
     }
 
     // Find or create device
     let device = await Device.findOne({ deviceId });
-    
+
     if (!device) {
       device = await Device.create({
         deviceId,
         deviceInfo,
-        status: 'inactive'
+        status: "inactive",
+        pushToken,
       });
     } else {
       // Update device info
       device.deviceInfo = deviceInfo;
+      if (pushToken) device.pushToken = pushToken;
       await device.save();
     }
 
     // Check if device is already enrolled (double entry)
     const existingEnrollment = await Enrollment.findOne({
       deviceId: device._id,
-      status: 'active'
+      status: "active",
     });
 
     if (existingEnrollment) {
       // EDGE CASE 1: Device is already enrolled in the SAME facility
       // Action: Return 200 OK (Idempotent success) but do not create new enrollment
-      if (existingEnrollment.facilityId.toString() === qrCode.facilityId._id.toString()) {
-          
-          // Re-send lock command just in case
-          await mdmService.lockCamera(deviceId, deviceInfo.platform);
+      if (
+        existingEnrollment.facilityId.toString() ===
+        qrCode.facilityId._id.toString()
+      ) {
+        // Re-send lock command just in case
+        await mdmService.lockCamera(deviceId, deviceInfo.platform);
 
-          return res.status(200).json({
-              status: 'success',
-              message: 'Device is already enrolled. Camera locked.',
-              data: {
-                  enrollmentId: existingEnrollment.enrollmentId,
-                  facilityName: qrCode.facilityId.name,
-                  action: 'LOCK_CAMERA'
-              }
-          });
+        return res.status(200).json({
+          status: "success",
+          message: "Device is already enrolled. Camera locked.",
+          data: {
+            enrollmentId: existingEnrollment.enrollmentId,
+            facilityName: qrCode.facilityId.name,
+            action: "LOCK_CAMERA",
+          },
+        });
       }
 
       // EDGE CASE 2: Device is enrolled in a DIFFERENT facility
       // Action: Return 409 Conflict
       return res.status(409).json({
-        status: 'error',
-        message: 'Device is already enrolled in another facility. Please scan exit there first.'
+        status: "error",
+        message:
+          "Device is already enrolled in another facility. Please scan exit there first.",
       });
     }
 
     // Enroll device with MDM (Lock Camera)
-    const lockResult = await mdmService.lockCamera(deviceId, deviceInfo.platform);
+    const lockResult = await mdmService.lockCamera(
+      deviceId,
+      deviceInfo.platform
+    );
 
     if (!lockResult.success) {
       return res.status(500).json({
-        status: 'error',
-        message: 'Failed to lock camera',
-        error: lockResult.error
+        status: "error",
+        message: "Failed to lock camera",
+        error: lockResult.error,
       });
     }
 
     // Create enrollment record
     const enrollmentId = uuidv4();
-    
+
     const enrollment = await Enrollment.create({
       enrollmentId,
       deviceId: device._id,
       facilityId: qrCode.facilityId._id,
       entryQRCode: qrCode._id,
-      status: 'active',
-      enrolledAt: new Date()
+      status: "active",
+      enrolledAt: new Date(),
     });
 
     // Update device status
-    device.status = 'active';
+    device.status = "active";
     device.currentFacility = qrCode.facilityId._id;
     device.lastEnrollment = enrollment._id;
     await device.save();
@@ -172,21 +178,19 @@ exports.scanEntry = async (req, res) => {
 
     // Return response in requested format
     res.status(200).json({
-      status: 'success',
-      message: 'Entry allowed',
+      status: "success",
+      message: "Entry allowed",
       data: {
         enrollmentId: enrollment.enrollmentId,
         facilityName: qrCode.facilityId.name,
-        action: 'LOCK_CAMERA'
-      }
+        action: "LOCK_CAMERA",
+      },
     });
-
   } catch (error) {
-    console.error('Scan entry error:', error);
     res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-      error: error.message
+      status: "error",
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
@@ -200,8 +204,8 @@ exports.scanExit = async (req, res) => {
     // Need deviceId and QR token (user flow)
     if (!deviceId || !token) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Token and deviceId are required'
+        status: "error",
+        message: "Token and deviceId are required",
       });
     }
 
@@ -212,8 +216,8 @@ exports.scanExit = async (req, res) => {
 
     if (!normalizedToken) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Token and deviceId are required'
+        status: "error",
+        message: "Token and deviceId are required",
       });
     }
 
@@ -226,24 +230,24 @@ exports.scanExit = async (req, res) => {
         decoded = { qrCodeId: qrCode.qrCodeId };
       } else {
         return res.status(400).json({
-          status: 'error',
-          message: 'Invalid or expired token'
+          status: "error",
+          message: "Invalid or expired token",
         });
       }
     }
 
     if (!qrCode || !qrCode.isValid()) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Invalid or expired QR code'
+        status: "error",
+        message: "Invalid or expired QR code",
       });
     }
 
     // Check if it's an exit QR
-    if (qrCode.type !== 'exit') {
+    if (qrCode.type !== "exit") {
       return res.status(400).json({
-        status: 'error',
-        message: 'This QR code is not for exit'
+        status: "error",
+        message: "This QR code is not for exit",
       });
     }
 
@@ -255,61 +259,58 @@ exports.scanExit = async (req, res) => {
       // Action: Return 200 OK with UNLOCK command (Safety net)
       // Even if we don't know them, if they scan exit, we should ensure their camera is unlocked.
       return res.status(200).json({
-        status: 'success',
-        message: 'Exit allowed (Device not registered)',
+        status: "success",
+        message: "Exit allowed (Device not registered)",
         data: {
-          action: 'UNLOCK_CAMERA'
-        }
+          action: "UNLOCK_CAMERA",
+        },
       });
     }
 
     // Find active enrollment
     const enrollment = await Enrollment.findOne({
       deviceId: device._id,
-      status: 'active'
+      status: "active",
     });
 
     if (!enrollment) {
       // EDGE CASE 4: Device exists but no active enrollment (Already exited or never entered)
       // Action: Return 200 OK with UNLOCK command (Idempotent success)
-      
+
       // Force unlock just in case
-      await mdmService.unlockCamera(
-        deviceId, 
-        device.deviceInfo.platform
-      );
+      await mdmService.unlockCamera(deviceId, device.deviceInfo.platform);
 
       return res.status(200).json({
-        status: 'success',
-        message: 'Exit allowed (Already checked out)',
+        status: "success",
+        message: "Exit allowed (Already checked out)",
         data: {
-          action: 'UNLOCK_CAMERA'
-        }
+          action: "UNLOCK_CAMERA",
+        },
       });
     }
 
     // Unlock camera (skip if already forced exit in past)
     const unlockResult = await mdmService.unlockCamera(
-      deviceId, 
+      deviceId,
       device.deviceInfo.platform
     );
 
     if (!unlockResult.success) {
       return res.status(500).json({
-        status: 'error',
-        message: 'Failed to unlock camera',
-        error: unlockResult.error
+        status: "error",
+        message: "Failed to unlock camera",
+        error: unlockResult.error,
       });
     }
 
     // Update enrollment
-    enrollment.status = 'completed';
+    enrollment.status = "completed";
     enrollment.unenrolledAt = new Date();
     enrollment.exitQRCode = qrCode._id;
     await enrollment.save();
 
     // Update device status
-    device.status = 'inactive';
+    device.status = "inactive";
     device.currentFacility = null;
     device.lastEnrollment = enrollment._id;
     await device.save();
@@ -319,159 +320,90 @@ exports.scanExit = async (req, res) => {
 
     // Return response in requested format
     res.status(200).json({
-      status: 'success',
-      message: 'Exit allowed',
+      status: "success",
+      message: "Exit allowed",
       data: {
-        action: 'UNLOCK_CAMERA'
-      }
+        action: "UNLOCK_CAMERA",
+      },
     });
-
   } catch (error) {
-    console.error('Scan exit error:', error);
     res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-      error: error.message
+      status: "error",
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
 
-// @desc    Admin: force exit (unlock) when user forgot to scan exit
-// @route   POST /api/enrollments/admin/force-exit
-// @note    Protect this route with auth middleware when available.
-exports.forceExitAdmin = async (req, res) => {
+// @desc    Visitor taps push to restore permissions (idempotent)
+// @route   POST /api/enrollments/restore-from-push
+exports.restoreFromPush = async (req, res) => {
   try {
-    const { enrollmentId, reason, initiatedBy, deviceId } = req.body;
+    const { token, deviceId } = req.body;
 
-    if (!enrollmentId && !deviceId) {
+    if (!token || !deviceId) {
       return res.status(400).json({
-        status: 'error',
-        message: 'enrollmentId or deviceId is required'
-      }); 
-    }
-
-    // Find enrollment by id or by active device
-    let enrollment = null;
-    if (enrollmentId) {
-      enrollment = await Enrollment.findOne({ enrollmentId, status: 'active' }).populate('deviceId');
-    }
-    if (!enrollment && deviceId) {
-      const device = await Device.findOne({ deviceId });
-      if (device) {
-        enrollment = await Enrollment.findOne({ deviceId: device._id, status: 'active' }).populate('deviceId');
-      }
-    }
-
-    if (!enrollment || !enrollment.deviceId) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Active enrollment not found'
+        status: "error",
+        message: "token and deviceId are required",
       });
     }
 
-    const device = enrollment.deviceId;
-
-    // Unlock camera
-    await mdmService.unlockCamera(device.deviceId, device.deviceInfo.platform);
-
-    // Update enrollment & device
-    enrollment.status = 'forced_exit';
-    enrollment.unenrolledAt = new Date();
-    if (initiatedBy) enrollment.initiatedBy = initiatedBy;
-    if (reason) enrollment.reason = reason;
-    await enrollment.save();
-
-    device.status = 'inactive';
-    device.currentFacility = null;
-    device.lastEnrollment = enrollment._id;
-    await device.save();
-
-    return res.status(200).json({
-      status: 'success',
-      message: 'Device exited and camera unlocked by admin',
-      data: {
-        action: 'UNLOCK_CAMERA',
-        enrollmentId: enrollment.enrollmentId
-      }
-    });
-  } catch (error) {
-    console.error('Admin force-exit error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-      error: error.message
-    });
-  }
-};
-
-// @desc    Admin: get active enrollment details by deviceId (for forgotten exit)
-// @route   GET /api/enrollments/admin/active-device/:deviceId
-exports.getActiveByDeviceAdmin = async (req, res) => {
-  try {
-    const { deviceId } = req.params;
-
-    if (!deviceId) {
+    let decoded;
+    try {
+      decoded = verifyRestoreToken(token);
+    } catch (err) {
       return res.status(400).json({
-        status: 'error',
-        message: 'deviceId is required'
+        status: "error",
+        message: "Invalid or expired token",
+      });
+    }
+
+    if (decoded.deviceId !== deviceId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Token does not match device",
       });
     }
 
     const device = await Device.findOne({ deviceId });
     if (!device) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Device not found'
+        status: "error",
+        message: "Device not found",
       });
     }
 
+    // Best-effort unlock
+    await mdmService.unlockCamera(deviceId, device.deviceInfo.platform);
+
+    // Close any active enrollment
     const enrollment = await Enrollment.findOne({
       deviceId: device._id,
-      status: 'active'
-    })
-      .populate('facilityId')
-      .populate('entryQRCode')
-      .populate('exitQRCode');
+      status: "active",
+    });
 
-    if (!enrollment) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'No active enrollment for this device'
-      });
+    if (enrollment) {
+      enrollment.status = "forced_exit";
+      enrollment.unenrolledAt = new Date();
+      enrollment.exitQRCode = enrollment.exitQRCode || null;
+      await enrollment.save();
+      device.lastEnrollment = enrollment._id;
     }
 
+    device.status = "inactive";
+    device.currentFacility = null;
+    await device.save();
+
     return res.status(200).json({
-      status: 'success',
-      data: {
-        enrollmentId: enrollment.enrollmentId,
-        device: {
-          deviceId: device.deviceId,
-          deviceName: device.deviceInfo?.deviceName,
-          platform: device.deviceInfo?.platform,
-          model: device.deviceInfo?.model,
-          status: device.status
-        },
-        facility: enrollment.facilityId
-          ? {
-              id: enrollment.facilityId._id,
-              name: enrollment.facilityId.name
-            }
-          : null,
-        entryQRCode: enrollment.entryQRCode
-          ? {
-              id: enrollment.entryQRCode._id,
-              name: enrollment.entryQRCode.qrCodeId
-            }
-          : null,
-        enrolledAt: enrollment.enrolledAt
-      }
+      status: "success",
+      message: "Permissions restored",
+      data: { action: "UNLOCK_CAMERA" },
     });
   } catch (error) {
-    console.error('Admin get active by device error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-      error: error.message
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
