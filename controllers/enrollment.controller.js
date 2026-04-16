@@ -99,8 +99,6 @@ exports.scanEntry = async (req, res) => {
         "facilityId"
       );
 
-      qrLookupTimer({ method: "jwt", success: !!qrCode });
-
       if (!qrCode) {
         logger.warn("QR Code not found after JWT verification", {
           requestId,
@@ -118,8 +116,6 @@ exports.scanEntry = async (req, res) => {
       qrCode = await QRCode.findOne({ token: normalizedToken }).populate(
         "facilityId"
       );
-
-      qrLookupTimer({ method: "fallback", success: !!qrCode });
 
       if (qrCode) {
         decoded = { qrCodeId: qrCode.qrCodeId };
