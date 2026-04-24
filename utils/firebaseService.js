@@ -90,7 +90,7 @@ class FirebaseService {
           type: payload.type || "RESTORE",
           token: payload.token || "",
           deviceId: payload.deviceId || "",
-          facilityId: payload.facilityId || "",
+          facilityId: payload.facilityId?.toString() || "",
           timestamp: Date.now().toString(),
         },
         android: {
