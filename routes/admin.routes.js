@@ -11,7 +11,6 @@ const {
 const {
   listActiveDevices,
   getActiveDeviceById,
-  forceExit,
 } = require("../controllers/device.controller");
 const {
   getAllAdminsList,
@@ -41,9 +40,5 @@ router.get("/devices/active", listActiveDevices);
 // @desc    Get active enrollment by device ID
 // @route   GET /api/admin/devices/:deviceId/active-enrollment
 router.get("/devices/:deviceId/active-enrollment", getActiveDeviceById);
-
-// @desc    Force-exit device with notification
-// @route   GET /api/admin/devices/:deviceId/force-exit
-router.post("/devices/:deviceId/force-exit", forceExit);
 
 module.exports = router;
