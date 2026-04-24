@@ -1,34 +1,72 @@
 {
   "info": {
     "name": "CamBlock APIs",
-    "description": "Lean Postman collection for the active CamBlock App endpoints only (updated 2026-03-09).",
+    "description": "Lean Postman collection for the active CamBlock App endpoints only (updated 2026-04-24). Includes Force Exit Request APIs for user emergency exit and admin approval workflow.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
-    { "key": "api_base", "value": "{{base_url}}/api", "type": "string" },
-    { "key": "admin_token", "value": "", "type": "string" },
-    { "key": "admin_username", "value": "admin@example.com", "type": "string" },
-    { "key": "admin_password", "value": "changeme", "type": "string" },
-    { "key": "facility_id", "value": "", "type": "string" },
-    { "key": "device_id", "value": "test-device-123", "type": "string" },
-    { "key": "entry_token", "value": "", "type": "string" },
-    { "key": "exit_token", "value": "", "type": "string" },
-    { "key": "restore_token", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "api_base",
+      "value": "{{base_url}}/api",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_username",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "changeme",
+      "type": "string"
+    },
+    {
+      "key": "facility_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_id",
+      "value": "test-device-123",
+      "type": "string"
+    },
+    {
+      "key": "entry_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exit_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "restore_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "force_exit_request_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_auth_token",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
-    {
-      "name": "Health",
-      "item": [
-        {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
-          }
-        }
-      ]
-    },
     {
       "name": "Enrollments (User)",
       "item": [
@@ -36,39 +74,64 @@
           "name": "Scan Entry (lock)",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"{{entry_token}}\",\n  \"deviceId\": \"{{device_id}}\",\n  \"deviceInfo\": {\n    \"platform\": \"android\",\n    \"model\": \"Pixel\",\n    \"pushToken\": \"optional-push-token\"\n  }\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/enrollments/scan-entry", "host": ["{{base_url}}"], "path": ["api", "enrollments", "scan-entry"] }
+            "url": {
+              "raw": "{{api_base}}/enrollments/scan-entry",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "enrollments",
+                "scan-entry"
+              ]
+            }
           }
         },
         {
           "name": "Scan Exit (unlock)",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"{{exit_token}}\",\n  \"deviceId\": \"{{device_id}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/enrollments/scan-exit", "host": ["{{base_url}}"], "path": ["api", "enrollments", "scan-exit"] }
-          }
-        },
-        {
-          "name": "Restore From Push (unlock)",
-          "request": {
-            "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"{{restore_token}}\",\n  \"deviceId\": \"{{device_id}}\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": { "raw": "{{api_base}}/enrollments/restore-from-push", "host": ["{{base_url}}"], "path": ["api", "enrollments", "restore-from-push"] }
+            "url": {
+              "raw": "{{api_base}}/enrollments/scan-exit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "enrollments",
+                "scan-exit"
+              ]
+            }
           }
         }
       ]
@@ -80,45 +143,113 @@
           "name": "Admin Register",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/auth/admin/register", "host": ["{{base_url}}"], "path": ["api", "auth", "admin", "register"] }
+            "url": {
+              "raw": "{{api_base}}/auth/admin/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "admin",
+                "register"
+              ]
+            }
           }
         },
         {
           "name": "Admin Login",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/auth/admin/login", "host": ["{{base_url}}"], "path": ["api", "auth", "admin", "login"] }
+            "url": {
+              "raw": "{{api_base}}/auth/admin/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "admin",
+                "login"
+              ]
+            }
           }
         }
       ]
     },
     {
       "name": "Facilities",
-      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{admin_token}}", "type": "string" } ] },
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{admin_token}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Create Facility",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"HQ One\",\n  \"description\": \"Headquarters lobby kiosks\",\n  \"location\": {\n    \"address\": \"1 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"country\": \"USA\"\n  },\n  \"notificationEmails\": [\"CamBlock@example.com\"],\n  \"timezone\": \"America/Chicago\",\n  \"status\": \"active\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/admin/facilities", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities"] }
+            "url": {
+              "raw": "{{api_base}}/admin/facilities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "facilities"
+              ]
+            }
           }
         },
         {
@@ -127,13 +258,31 @@
             "method": "GET",
             "url": {
               "raw": "{{api_base}}/admin/facilities?page=1&limit=10&status=&q=",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "facilities"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "facilities"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "status", "value": "" },
-                { "key": "q", "value": "" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
               ]
             }
           }
@@ -142,34 +291,85 @@
           "name": "Get Facility Detail",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
+            "url": {
+              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "facilities",
+                "{{facility_id}}"
+              ]
+            }
           }
         },
         {
           "name": "Update Facility",
           "request": {
             "method": "PUT",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated HQ\",\n  \"description\": \"Updated description\",\n  \"location\": {\n    \"address\": \"2 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"country\": \"USA\"\n  },\n  \"notificationEmails\": [\"CamBlock@example.com\", \"ops@example.com\"],\n  \"timezone\": \"America/Chicago\",\n  \"status\": \"active\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
+            "url": {
+              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "facilities",
+                "{{facility_id}}"
+              ]
+            }
           }
         },
         {
           "name": "Delete Facility",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{api_base}}/admin/facilities/{{facility_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "facilities", "{{facility_id}}"] }
+            "url": {
+              "raw": "{{api_base}}/admin/facilities/{{facility_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "facilities",
+                "{{facility_id}}"
+              ]
+            }
           }
         }
       ]
     },
     {
       "name": "Devices",
-      "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{admin_token}}", "type": "string" } ] },
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{admin_token}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Active Devices",
@@ -177,12 +377,28 @@
             "method": "GET",
             "url": {
               "raw": "{{api_base}}/admin/devices/active?page=1&limit=10&q=",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "devices", "active"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "devices",
+                "active"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "q", "value": "" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
               ]
             }
           }
@@ -191,20 +407,261 @@
           "name": "Get Specific Active Device",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{api_base}}/admin/devices/{{device_id}}/active-enrollment", "host": ["{{base_url}}"], "path": ["api", "admin", "devices", "{{device_id}}", "active-enrollment"] }
+            "url": {
+              "raw": "{{api_base}}/admin/devices/{{device_id}}/active-enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "devices",
+                "{{device_id}}",
+                "active-enrollment"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Force Exit (User)",
+      "item": [
+        {
+          "name": "Create Force Exit Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{device_id}}\",\n  \"reason\": \"Emergency exit needed - urgent situation\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_base}}/force-exit/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "request"
+              ]
+            }
           }
         },
         {
-          "name": "Force Exit",
+          "name": "Get Request Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_base}}/force-exit/status/{{device_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "status",
+                "{{device_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complete Force Exit (Handle Push Notification)",
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_auth_token}}"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reason\": \"Forgot to scan exit\",\n  \"initiatedBy\": \"admin-username\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"token\": \"{{restore_token}}\",\n  \"deviceId\": \"{{device_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{api_base}}/admin/devices/{{device_id}}/force-exit", "host": ["{{base_url}}"], "path": ["api", "admin", "devices", "{{device_id}}", "force-exit"] }
+            "url": {
+              "raw": "{{api_base}}/force-exit/complete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "complete"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Force Exit (Admin)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{admin_token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Get Pending Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_base}}/force-exit/pendingList?facilityId={{facility_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "facilityId",
+                  "value": "{{facility_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Pending Requests (No Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_base}}/force-exit/pendingList",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "pending"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Force Exit Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminNotes\": \"Emergency approved - user verified identity\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_base}}/force-exit/approve/{{force_exit_request_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "approve",
+                "{{force_exit_request_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deny Force Exit Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminNotes\": \"Request denied - user must use regular exit QR code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_base}}/force-exit/deny/{{force_exit_request_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "force-exit",
+                "deny",
+                "{{force_exit_request_id}}"
+              ]
+            }
           }
         }
       ]

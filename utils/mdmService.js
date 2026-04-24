@@ -305,15 +305,6 @@ class MDMService {
         return { success: false, error: "missing pushToken" };
       }
 
-      const serverKey = process.env.FCM_SERVER_KEY;
-      if (!serverKey) {
-        logger.error(`[MDM] Push notification failed - FCM_SERVER_KEY not configured`, {
-          operationId,
-          hasServerKey: false
-        });
-        return { success: false, error: "FCM_SERVER_KEY not configured" };
-      }
-
       const body = {
         to: pushToken,
         notification: {
@@ -334,7 +325,6 @@ class MDMService {
 
       const response = await axios.post("https://fcm.googleapis.com/fcm/send", body, {
         headers: {
-          Authorization: `key=${serverKey}`,
           "Content-Type": "application/json",
         },
       });

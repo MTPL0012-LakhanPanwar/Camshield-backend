@@ -5,7 +5,6 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const path = require("path");
-const axios = require("axios");
 const {
   scheduleDailyJob,
   runDailyJobOnce,
@@ -16,6 +15,7 @@ const logger = require("./utils/logger");
 const enrollmentRoutes = require("./routes/enrollment.routes");
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
+const forceExitRoutes = require("./routes/forceExit.routes");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -64,6 +64,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/force-exit", forceExitRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
